@@ -9,12 +9,11 @@
 	<Description>Chat backend solution for ASP.NET server</Description>
 	<Copyright>Copyright © 2022 jihadkhawaja</Copyright>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
-	<RepositoryUrl>https://github.com/jihadkhawaja/MobileChat</RepositoryUrl>
-	<PackageProjectUrl>https://github.com/jihadkhawaja/MobileChat</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/jihadkhawaja/mobilechat.server</RepositoryUrl>
+	<PackageProjectUrl>https://github.com/jihadkhawaja/mobilechat.server</PackageProjectUrl>
 	<PackageIcon>favico.png</PackageIcon>
 	<PackageTags>asp.net, blazor, signalr, chat, server</PackageTags>
-	<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-	<PackageReleaseNotes>https://github.com/jihadkhawaja/MobileChat/releases</PackageReleaseNotes>
+	<PackageReleaseNotes>https://github.com/jihadkhawaja/mobilechat.server/releases</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
