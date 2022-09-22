@@ -10,7 +10,7 @@ ASP.NET SignalR server chat solution NuGet package.
 Find everything you need to get started at the [Wiki](https://github.com/jihadkhawaja/mobilechat.server/wiki)
 
 ## Samples
-- [MobileChat](https://github.com/jihadkhawaja/MobileChat)
+Find all samples [here](https://github.com/jihadkhawaja/mobilechat.server/network/dependents)
 
 ### Contribution
 Feel free to fork and **contribute** or **open an issue**. All contributions are welcome!
