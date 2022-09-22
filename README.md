@@ -3,11 +3,8 @@
 # About
 ASP.NET SignalR server chat solution NuGet package.
 
-## Supported Platforms
-- Windows 7 or higher
-- macOS 11 or higher
-- Android 7.0 (API 24) or higher
-- iOS 14 or higher
+# NuGet
+[Add Package](https://www.nuget.org/packages/jihadkhawaja.mobilechat.server/)
 
 # Documentation
 Find everything you need to get started at the [Wiki](https://github.com/jihadkhawaja/mobilechat.server/wiki)
