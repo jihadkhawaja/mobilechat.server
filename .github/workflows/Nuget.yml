@@ -78,3 +78,6 @@ jobs:
         name: Release ${{ needs.build.outputs.Version }}
         artifacts: "nugetPackage/*"
         token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Publish to Nuegt
+      run: nuget push nugetPackage/* -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
