@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<Version>0.0.11</Version>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<Authors>jihadkhawaja</Authors>
 	<Description>Chat backend solution for ASP.NET server</Description>
 	<Copyright>Copyright © 2022 jihadkhawaja</Copyright>
@@ -28,6 +28,7 @@
 
   <ItemGroup>
 	<None Include="..\..\favico.png" Pack="true" PackagePath="" />
+	<None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
