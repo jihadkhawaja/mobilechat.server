@@ -3,8 +3,6 @@
 # About
 ASP.NET SignalR server chat solution NuGet package.
 
-Self-host chatting solution with cross-platform client application.
-
 ## Supported Platforms
 - Windows 7 or higher
 - macOS 11 or higher
