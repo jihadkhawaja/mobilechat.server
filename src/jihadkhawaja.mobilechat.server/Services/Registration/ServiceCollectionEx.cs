@@ -1,8 +1,11 @@
 ﻿using jihadkhawaja.mobilechat.server.Database;
+using jihadkhawaja.mobilechat.server.Hubs;
 using jihadkhawaja.mobilechat.server.Interfaces;
 using jihadkhawaja.mobilechat.server.Models;
 using jihadkhawaja.mobilechat.server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +14,7 @@ using System.Text;
 public static class ServiceCollectionEx
 {
     public static IConfiguration? Configuration { get; private set; }
+    public static bool JWTEnabled { get; private set; } = true;
     public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config)
     {
         Configuration = config;
@@ -51,13 +55,6 @@ public static class ServiceCollectionEx
             };
         });
         services.AddAuthorization();
-        services.AddCors(policy =>
-        {
-            policy.AddPolicy("CorsPolicy", opt => opt
-                .AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod());
-        });
 
         services.AddScoped<IEntity<User>, EntityService<User>>();
         services.AddScoped<IEntity<UserFriend>, EntityService<UserFriend>>();
@@ -66,5 +63,30 @@ public static class ServiceCollectionEx
         services.AddScoped<IEntity<Message>, EntityService<Message>>();
 
         return services;
+    }
+
+    public static void UseMobileChatServices(this WebApplication app, bool _JWTEnabled = true)
+    {
+        JWTEnabled = _JWTEnabled;
+
+        //auto-migrate database
+        using (IServiceScope scope = app.Services.CreateScope())
+        {
+            DataContext db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            db.Database.Migrate();
+        }
+
+        if (_JWTEnabled)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            //hubs
+            app.MapHub<ChatHub>("/chathub");
+        }
+        else
+        {
+            app.MapHub<ChatHubAnonymous>("/chathub");
+        }
     }
 }
