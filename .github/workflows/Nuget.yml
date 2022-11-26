@@ -1,10 +1,12 @@
 name: Nuget
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    
 
 jobs:
   build:
@@ -59,13 +61,16 @@ jobs:
         name: nugetPackage
     - name: Prep packages
       run: dotnet nuget add source --username jihadkhawaja --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/jihadkhawaja/index.json"
-    - name: Push package to GitHub packages 
-      if: needs.build.outputs.CommitsSinceVersionSource > 0 #Only release if there has been a commit/version change  
+    - name: Push package to GitHub packages
+      # Only release if there has been a commit/version change  
+      if: needs.build.outputs.CommitsSinceVersionSource > 0
       run: dotnet nuget push nugetPackage/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }}  --source "github"
     
     #Create release
     - name: Create Release
-      if: 1 == 0 #needs.build.outputs.CommitsSinceVersionSource > 0 #Only release if there has been a commit/version change
+      # needs.build.outputs.CommitsSinceVersionSource > 0
+      # Only release if there has been a commit/version change
+      if: 1 == 0
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,16 +78,14 @@ jobs:
         tag_name: ${{ needs.build.outputs.Version }}
         release_name: Release ${{ needs.build.outputs.Version }}
     - name: Create Release
-      if: needs.build.outputs.CommitsSinceVersionSource > 0 #Only release if there has been a commit/version change
+      # Only release if there has been a commit/version change
+      if: needs.build.outputs.CommitsSinceVersionSource > 0
       uses: ncipollo/release-action@v1
       with:
         tag: ${{ needs.build.outputs.Version }}
         name: Release ${{ needs.build.outputs.Version }}
         artifacts: "nugetPackage/*"
         token: ${{ secrets.GITHUB_TOKEN }}
-        
-#     - name: Publish to Nuget Package
-#       run: nuget push nugetPackage/* -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
       
     - name: Publish nuget package
       run: dotnet nuget push nugetPackage/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
