@@ -35,18 +35,16 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
-    - name: Setup .NET 2
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 7.0.x
+         dotnet-version: |
+          6.0.x
+          7.0.x
     - name: Build and Pack NuGet package
       run: dotnet pack src/jihadkhawaja.mobilechat.server/jihadkhawaja.mobilechat.server.csproj -p:Version='${{ steps.gitversion.outputs.SemVer }}' -c Release
     - name: Upload NuGet package to GitHub
       uses: actions/upload-artifact@v2
       with:
         name: nugetPackage
-        path: src/jihadkhawaja.mobilechat.server/bin/Release/ 
+        path: src/jihadkhawaja.mobilechat.server/bin/Release/
         
   release:
     runs-on: ubuntu-latest    
