@@ -15,7 +15,19 @@ namespace jihadkhawaja.mobilechat.server.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
+            switch (ServiceCollectionEx.SelectedDatabase)
+            {
+                case ServiceCollectionEx.DatabaseEnum.Postgres:
+                    options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), b =>
+                    b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
+                    break;
+                case ServiceCollectionEx.DatabaseEnum.SqlServer:
+                    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), b =>
+                    b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public DbSet<User>? Users { get; set; }

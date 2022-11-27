@@ -13,11 +13,27 @@ using System.Text;
 
 public static class ServiceCollectionEx
 {
+    public enum DatabaseEnum
+    {
+        Postgres,
+        SqlServer
+    }
     public static IConfiguration? Configuration { get; private set; }
     public static bool JWTEnabled { get; private set; } = true;
-    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config)
+    public static DatabaseEnum SelectedDatabase { get; private set; }
+    public static string CurrentExecutionAssemblyName { get; private set; }
+    /// <summary>
+    /// Add MobileChat Server Services
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="config"></param>
+    /// <param name="databaseEnum">Database type (Postgres, SqlServer..etc.)</param>
+    /// <param name="executionClassType">Main execuation class (Program or Startup..etc.)</param>
+    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, DatabaseEnum databaseEnum, Type executionClassType)
     {
         Configuration = config;
+        SelectedDatabase = databaseEnum;
+        CurrentExecutionAssemblyName = System.Reflection.Assembly.GetAssembly(executionClassType).GetName().Name;
 
         services.AddScoped<IMobileChatService, MobileChatService>();
         //signalr
@@ -64,10 +80,14 @@ public static class ServiceCollectionEx
 
         return services;
     }
-
-    public static void UseMobileChatServices(this WebApplication app, bool _JWTEnabled = true)
+    /// <summary>
+    /// Use MobileChat Server Services
+    /// </summary>
+    /// <param name="app"></param>
+    /// <param name="jwtEnabled"></param>
+    public static void UseMobileChatServices(this WebApplication app, bool jwtEnabled = true)
     {
-        JWTEnabled = _JWTEnabled;
+        JWTEnabled = jwtEnabled;
 
         //auto-migrate database
         using (IServiceScope scope = app.Services.CreateScope())
@@ -76,7 +96,7 @@ public static class ServiceCollectionEx
             db.Database.Migrate();
         }
 
-        if (_JWTEnabled)
+        if (jwtEnabled)
         {
             app.UseAuthentication();
             app.UseAuthorization();
