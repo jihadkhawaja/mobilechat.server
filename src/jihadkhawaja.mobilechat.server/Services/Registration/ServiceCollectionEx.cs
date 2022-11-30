@@ -22,6 +22,7 @@ public static class ServiceCollectionEx
     public static bool JWTEnabled { get; private set; } = true;
     public static DatabaseEnum SelectedDatabase { get; private set; }
     public static string CurrentExecutionAssemblyName { get; private set; }
+    private static bool AutoMigrateDatabase { get; set; }
     /// <summary>
     /// Add MobileChat Server Services
     /// </summary>
@@ -29,11 +30,13 @@ public static class ServiceCollectionEx
     /// <param name="config"></param>
     /// <param name="databaseEnum">Database type (Postgres, SqlServer..etc.)</param>
     /// <param name="executionClassType">Main execuation class (Program or Startup..etc.)</param>
-    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, DatabaseEnum databaseEnum, Type executionClassType)
+    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, Type executionClassType, DatabaseEnum databaseEnum, bool autoMigrateDatabase = true, bool jwtAuthentication = true)
     {
         Configuration = config;
         SelectedDatabase = databaseEnum;
         CurrentExecutionAssemblyName = System.Reflection.Assembly.GetAssembly(executionClassType).GetName().Name;
+        JWTEnabled = jwtAuthentication;
+        AutoMigrateDatabase = autoMigrateDatabase;
 
         services.AddScoped<IMobileChatService, MobileChatService>();
         //signalr
@@ -41,36 +44,39 @@ public static class ServiceCollectionEx
         //database
         services.AddDbContext<DataContext>();
         //auth
-        services.AddAuthentication(options =>
+        if(JWTEnabled)
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-            options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["Jwt"]));
-            options.TokenValidationParameters.ValidateIssuer = false;
-            options.TokenValidationParameters.ValidateAudience = false;
-            options.TokenValidationParameters.ValidateLifetime = true;
-            options.Events = new JwtBearerEvents
+            services.AddAuthentication(options =>
             {
-                OnMessageReceived = context =>
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters.ValidateIssuerSigningKey = true;
+                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["Jwt"]));
+                options.TokenValidationParameters.ValidateIssuer = false;
+                options.TokenValidationParameters.ValidateAudience = false;
+                options.TokenValidationParameters.ValidateLifetime = true;
+                options.Events = new JwtBearerEvents
                 {
-                    var accessToken = context.Request.Query["access_token"];
-
-                    // If the request is for our hub...
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) &&
-                        (path.StartsWithSegments("/chathub")))
+                    OnMessageReceived = context =>
                     {
-                        // Read the token out of the query string
-                        context.Token = accessToken;
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/chathub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
                     }
-                    return Task.CompletedTask;
-                }
-            };
-        });
-        services.AddAuthorization();
+                };
+            });
+            services.AddAuthorization();
+        }
 
         services.AddScoped<IEntity<User>, EntityService<User>>();
         services.AddScoped<IEntity<UserFriend>, EntityService<UserFriend>>();
@@ -85,18 +91,19 @@ public static class ServiceCollectionEx
     /// </summary>
     /// <param name="app"></param>
     /// <param name="jwtEnabled"></param>
-    public static void UseMobileChatServices(this WebApplication app, bool jwtEnabled = true)
+    public static void UseMobileChatServices(this WebApplication app)
     {
-        JWTEnabled = jwtEnabled;
-
         //auto-migrate database
-        using (IServiceScope scope = app.Services.CreateScope())
+        if(AutoMigrateDatabase)
         {
-            DataContext db = scope.ServiceProvider.GetRequiredService<DataContext>();
-            db.Database.Migrate();
+            using (IServiceScope scope = app.Services.CreateScope())
+            {
+                DataContext db = scope.ServiceProvider.GetRequiredService<DataContext>();
+                db.Database.Migrate();
+            }
         }
 
-        if (jwtEnabled)
+        if (JWTEnabled)
         {
             app.UseAuthentication();
             app.UseAuthorization();

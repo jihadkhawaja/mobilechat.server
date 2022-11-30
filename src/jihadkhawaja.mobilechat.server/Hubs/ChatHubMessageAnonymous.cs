@@ -6,7 +6,6 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 {
     public partial class ChatHubAnonymous : IChatMessage
     {
-
         public async Task<bool> SendMessage(Message message)
         {
             if (message == null)

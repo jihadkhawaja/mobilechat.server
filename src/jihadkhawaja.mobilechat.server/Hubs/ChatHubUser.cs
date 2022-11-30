@@ -13,12 +13,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<string?> GetUserDisplayName(Guid userId)
         {
-            IEnumerable<User> users = await UserService.Read(x => x.Id == userId);
-            if (users == null)
-            {
-                return null;
-            }
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Id == userId);
 
             if (user == null)
             {
@@ -36,12 +31,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<string?> GetUserDisplayNameByEmail(string email)
         {
-            IEnumerable<User> users = await UserService.Read(x => x.Email == email);
-            if (users == null)
-            {
-                return null;
-            }
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Email == email);
 
             if (user == null)
             {
@@ -59,12 +49,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<string?> GetUserUsername(Guid userId)
         {
-            IEnumerable<User> users = await UserService.Read(x => x.Id == userId);
-            if (users == null)
-            {
-                return null;
-            }
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Id == userId);
 
             if (user == null)
             {
@@ -97,8 +82,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 }
 
                 string Token = hc.Request.Query["access_token"];
-                IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-                User? cuser = users.FirstOrDefault();
+                User? cuser = await UserService.ReadFirst(x => x.Token == Token);
                 if (cuser == null)
                 {
                     return false;
@@ -109,20 +93,20 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 if (PatternMatchHelper.IsEmail(friendEmailorusername))
                 {
                     //get user id from email
-                    User? user = (await UserService.Read(x => x.Id == ConnectorUserId)).FirstOrDefault();
+                    User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
                     if (user == null)
                     {
                         return false;
                     }
                     //get friend id from email
-                    User? friendUser = (await UserService.Read(x => x.Email == friendEmailorusername)).FirstOrDefault();
+                    User? friendUser = await UserService.ReadFirst(x => x.Email == friendEmailorusername);
                     if (friendUser == null)
                     {
                         return false;
                     }
 
-                    if ((await UserFriendsService.Read(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
-                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id)).FirstOrDefault() != null)
+                    if (await UserFriendsService.ReadFirst(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
+                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id) != null)
                     {
                         return false;
                     }
@@ -134,20 +118,20 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 else
                 {
                     //get user id from username
-                    User? user = (await UserService.Read(x => x.Id == ConnectorUserId)).FirstOrDefault();
+                    User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
                     if (user == null)
                     {
                         return false;
                     }
                     //get friend id from username
-                    User? friendUser = (await UserService.Read(x => x.Username == friendEmailorusername)).FirstOrDefault();
+                    User? friendUser = await UserService.ReadFirst(x => x.Username == friendEmailorusername);
                     if (friendUser == null)
                     {
                         return false;
                     }
 
-                    if ((await UserFriendsService.Read(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
-                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id)).FirstOrDefault() != null)
+                    if (await UserFriendsService.ReadFirst(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
+                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id) != null)
                     {
                         return false;
                     }
@@ -182,8 +166,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 string Token = hc.Request.Query["access_token"];
 
-                IEnumerable<User> dbusers = await UserService.Read(x => x.Token == Token);
-                User? dbuser = dbusers.FirstOrDefault();
+                User? dbuser = await UserService.ReadFirst(x => x.Token == Token);
                 if (dbuser == null)
                 {
                     return false;
@@ -193,20 +176,20 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 if (PatternMatchHelper.IsEmail(friendEmailorusername))
                 {
                     //get user id from email
-                    User? user = (await UserService.Read(x => x.Id == ConnectorUserId)).FirstOrDefault();
+                    User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
                     if (user == null)
                     {
                         return false;
                     }
                     //get friend id from email
-                    User? friendUser = (await UserService.Read(x => x.Email == friendEmailorusername)).FirstOrDefault();
+                    User? friendUser = await UserService.ReadFirst(x => x.Email == friendEmailorusername);
                     if (friendUser == null)
                     {
                         return false;
                     }
 
-                    if ((await UserFriendsService.Read(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
-                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id)).FirstOrDefault() != null)
+                    if (await UserFriendsService.ReadFirst(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id ||
+                    x.FriendUserId == user.Id && x.UserId == friendUser.Id) != null)
                     {
                         return false;
                     }
@@ -218,20 +201,20 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 else
                 {
                     //get user id from username
-                    User? user = (await UserService.Read(x => x.Id == ConnectorUserId)).FirstOrDefault();
+                    User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
                     if (user == null)
                     {
                         return false;
                     }
                     //get friend id from username
-                    User? friendUser = (await UserService.Read(x => x.Username == friendEmailorusername)).FirstOrDefault();
+                    User? friendUser = await UserService.ReadFirst(x => x.Username == friendEmailorusername);
                     if (friendUser == null)
                     {
                         return false;
                     }
 
-                    if ((await UserFriendsService.Read(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id
-                    || x.FriendUserId == user.Id && x.UserId == friendUser.Id)).FirstOrDefault() == null)
+                    if (await UserFriendsService.ReadFirst(x => x.UserId == user.Id && x.FriendUserId == friendUser.Id ||
+                    x.FriendUserId == user.Id && x.UserId == friendUser.Id) == null)
                     {
                         return false;
                     }
@@ -262,7 +245,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<bool> GetUserIsFriend(Guid userId, Guid friendId)
         {
-            UserFriend? result = (await UserFriendsService.Read(x => x.UserId == userId && x.FriendUserId == friendId && x.IsAccepted)).FirstOrDefault();
+            UserFriend? result = await UserFriendsService.ReadFirst(x => x.UserId == userId && x.FriendUserId == friendId && x.IsAccepted);
 
             if (result is null)
             {
@@ -282,15 +265,15 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             string Token = hc.Request.Query["access_token"];
 
-            IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Token == Token);
+
             if (user == null)
             {
                 return false;
             }
             Guid ConnectorUserId = user.Id;
 
-            UserFriend? friendRequest = (await UserFriendsService.Read(x => x.UserId == friendId && x.FriendUserId == ConnectorUserId && !x.IsAccepted)).FirstOrDefault();
+            UserFriend? friendRequest = await UserFriendsService.ReadFirst(x => x.UserId == friendId && x.FriendUserId == ConnectorUserId && !x.IsAccepted);
 
             if (friendRequest is null)
             {
@@ -313,8 +296,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             string Token = hc.Request.Query["access_token"];
 
-            IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Token == Token);
+
             if (user == null)
             {
                 return false;
