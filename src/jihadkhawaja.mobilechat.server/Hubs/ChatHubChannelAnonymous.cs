@@ -1,7 +1,5 @@
 ﻿using jihadkhawaja.mobilechat.server.Interfaces;
 using jihadkhawaja.mobilechat.server.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,7 +7,6 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 {
     public partial class ChatHubAnonymous : IChatChannel
     {
-
         public async Task<Channel?> CreateChannel(params string[] usernames)
         {
             if (usernames.Length == 0)
@@ -30,7 +27,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return channel;
         }
-        
+
         public async Task<bool> AddChannelUsers(Guid channelid, params string[] usernames)
         {
             try
@@ -43,8 +40,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 string Token = hc.Request.Query["access_token"];
 
-                IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-                User? user = users.FirstOrDefault();
+                User? user = await UserService.ReadFirst(x => x.Token == Token);
+
                 if (user == null)
                 {
                     return false;
@@ -56,8 +53,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 for (int i = 0; i < usernames.Length; i++)
                 {
-                    IEnumerable<User> usersToAdd = await UserService.Read(x => x.Username == usernames[i]);
-                    User? userToAdd = usersToAdd.FirstOrDefault();
+                    User? userToAdd = await UserService.ReadFirst(x => x.Username == usernames[i]);
+
                     if (userToAdd is null)
                     {
                         return false;
@@ -92,12 +89,12 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return false;
         }
-        
+
         public async Task<bool> ChannelContainUser(Guid channelid, Guid userid)
         {
-            return (await ChannelUsersService.Read(x => x.ChannelId == channelid && x.UserId == userid)).FirstOrDefault() != null;
+            return await ChannelUsersService.ReadFirst(x => x.ChannelId == channelid && x.UserId == userid) != null;
         }
-        
+
         public async Task<User[]?> GetChannelUsers(Guid channelid)
         {
             HashSet<User> channelUsers = new();
@@ -106,9 +103,9 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 List<ChannelUser> currentChannelUsers = (await ChannelUsersService.Read(x => x.ChannelId == channelid)).ToList();
                 foreach (ChannelUser user in currentChannelUsers)
                 {
-                    var userdata = (await UserService.Read(x => x.Id == user.UserId)).FirstOrDefault();
+                    var userdata = await UserService.ReadFirst(x => x.Id == user.UserId);
 
-                    if(userdata != null)
+                    if (userdata != null)
                     {
                         channelUsers.Add(userdata);
                     }
@@ -131,7 +128,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return users.ToArray();
         }
-        
+
         public async Task<Channel[]?> GetUserChannels()
         {
             HashSet<Channel> userChannels = new();
@@ -139,15 +136,15 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             {
                 HttpContext? hc = Context.GetHttpContext();
 
-                if(hc == null)
+                if (hc == null)
                 {
                     return null;
                 }
 
                 string Token = hc.Request.Query["access_token"];
-                IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-                User? user = users.FirstOrDefault();
-                if(user == null)
+                User? user = await UserService.ReadFirst(x => x.Token == Token);
+
+                if (user == null)
                 {
                     return null;
                 }
@@ -156,8 +153,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 List<ChannelUser> channelUsers = (await ChannelUsersService.Read(x => x.UserId == ConnectorUserId)).ToList();
                 foreach (ChannelUser cu in channelUsers)
                 {
-                    IEnumerable<Channel> channels = await ChannelService.Read(x => x.Id == cu.ChannelId);
-                    Channel? channel = channels.FirstOrDefault();
+                    Channel? channel = await ChannelService.ReadFirst(x => x.Id == cu.ChannelId);
+
                     if (channel == null)
                     {
                         return null;
@@ -170,11 +167,10 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return userChannels.ToArray();
         }
-        
+
         public async Task<bool> IsChannelAdmin(Guid channelId, Guid userId)
         {
-            IEnumerable<ChannelUser> channelUsers = await ChannelUsersService.Read(x => x.ChannelId == channelId && x.UserId == userId && x.IsAdmin);
-            ChannelUser? channelAdmin = channelUsers.FirstOrDefault();
+            ChannelUser? channelAdmin = await ChannelUsersService.ReadFirst(x => x.ChannelId == channelId && x.UserId == userId && x.IsAdmin);
 
             if (channelAdmin is null)
             {
@@ -185,19 +181,19 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return true;
             }
         }
-        
+
         public async Task<bool> DeleteChannel(Guid channelId)
         {
             HttpContext? hc = Context.GetHttpContext();
-            if(hc == null)
+            if (hc == null)
             {
                 return false;
             }
 
             string Token = hc.Request.Query["access_token"];
 
-            IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Token == Token);
+
             if (user == null)
             {
                 return false;
@@ -222,7 +218,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return await ChannelService.Delete(x => x.Id == channelId);
         }
-        
+
         public async Task<bool> LeaveChannel(Guid channelId)
         {
             HttpContext? hc = Context.GetHttpContext();
@@ -233,8 +229,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             string Token = hc.Request.Query["access_token"];
 
-            IEnumerable<User> users = await UserService.Read(x => x.Token == Token);
-            User? user = users.FirstOrDefault();
+            User? user = await UserService.ReadFirst(x => x.Token == Token);
+
             if (user == null)
             {
                 return false;

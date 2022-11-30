@@ -39,7 +39,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 //set user IsOnline true when he connects or reconnects
                 if (!string.IsNullOrWhiteSpace(Token))
                 {
-                    User? connectedUser = (await UserService.Read(x => x.Token == Token)).FirstOrDefault();
+                    User? connectedUser = await UserService.ReadFirst(x => x.Token == Token);
                     if (connectedUser != null)
                     {
                         connectedUser.ConnectionId = Context.ConnectionId;
@@ -64,7 +64,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 //set user IsOnline false when he disconnects
                 if (!string.IsNullOrWhiteSpace(Token))
                 {
-                    User? connectedUser = (await UserService.Read(x => x.Token == Token)).FirstOrDefault();
+                    User? connectedUser = await UserService.ReadFirst(x => x.Token == Token);
                     if (connectedUser != null)
                     {
                         connectedUser.IsOnline = false;

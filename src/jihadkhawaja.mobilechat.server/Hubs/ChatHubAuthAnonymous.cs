@@ -16,7 +16,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 email = email.ToLower();
             }
 
-            if ((await UserService.Read(x => x.Username == username)).FirstOrDefault() != null)
+            if (await UserService.ReadFirst(x => x.Username == username) != null)
             {
                 return null;
             }
@@ -64,30 +64,29 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             if (PatternMatchHelper.IsEmail(emailorusername))
             {
-                if ((await UserService.Read(x => x.Email == emailorusername)).FirstOrDefault() == null)
+                User? user = await UserService.ReadFirst(x => x.Email == emailorusername);
+
+                if (user == null)
+                {
+                    return null;
+                }
+                else if (string.IsNullOrWhiteSpace(user.Password))
+                {
+                    return null;
+                }
+                else if (!CryptographyHelper.ComparePassword(password, user.Password))
+                {
+                    return null;
+                }
+                else if (ServiceCollectionEx.Configuration == null)
                 {
                     return null;
                 }
 
-                if ((await UserService.Read(x => x.Email == emailorusername && x.Password == password)).FirstOrDefault() == null)
-                {
-                    return null;
-                }
-
-                User? registeredUser = (await UserService.Read(x => x.Email == emailorusername)).FirstOrDefault();
-
-                if (registeredUser == null)
-                {
-                    return null;
-                }
+                User registeredUser = user;
 
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
-
-                if (ServiceCollectionEx.Configuration == null)
-                {
-                    return null;
-                }
 
                 var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
                 registeredUser.Token = generatedToken.Access_Token;
@@ -105,7 +104,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             }
             else
             {
-                User? user = (await UserService.Read(x => x.Username == emailorusername)).FirstOrDefault();
+                User? user = await UserService.ReadFirst(x => x.Username == emailorusername);
                 if (user == null)
                 {
                     return null;
@@ -114,26 +113,19 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 {
                     return null;
                 }
-
-                if (!CryptographyHelper.ComparePassword(password, user.Password))
+                else if (!CryptographyHelper.ComparePassword(password, user.Password))
+                {
+                    return null;
+                }
+                else if (ServiceCollectionEx.Configuration == null)
                 {
                     return null;
                 }
 
-                User? registeredUser = (await UserService.Read(x => x.Username == emailorusername)).FirstOrDefault();
-
-                if (registeredUser == null)
-                {
-                    return null;
-                }
+                User registeredUser = user;
 
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
-
-                if (ServiceCollectionEx.Configuration == null)
-                {
-                    return null;
-                }
 
                 var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
                 registeredUser.Token = generatedToken.Access_Token;
@@ -150,11 +142,27 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return result;
             }
         }
+        public async Task<string> RefreshSession(string token)
+        {
+            User? user = await UserService.ReadFirst(x => x.Token == token);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var generatedToken = await TokenGenerator.GenerateJwtToken(user, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
+            user.Token = generatedToken.Access_Token;
+
+            User[] users = new User[1] { user };
+            await UserService.Update(users);
+
+            return user.Token;
+        }
         public async Task<bool> ChangePassword(string emailorusername, string oldpassword, string newpassword)
         {
             if (PatternMatchHelper.IsEmail(emailorusername))
             {
-                User? registeredUser = (await UserService.Read(x => x.Email == emailorusername)).FirstOrDefault();
+                User? registeredUser = await UserService.ReadFirst(x => x.Email == emailorusername);
 
                 if (registeredUser is null)
                 {
@@ -180,7 +188,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             }
             else
             {
-                User? registeredUser = (await UserService.Read(x => x.Username == emailorusername)).FirstOrDefault();
+                User? registeredUser = await UserService.ReadFirst(x => x.Username == emailorusername);
 
                 if (registeredUser is null)
                 {
