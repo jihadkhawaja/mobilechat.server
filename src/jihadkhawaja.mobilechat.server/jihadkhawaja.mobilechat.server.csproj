@@ -14,6 +14,7 @@
 	<PackageIcon>favico.png</PackageIcon>
 	<PackageTags>asp.net, blazor, signalr, chat, server</PackageTags>
 	<PackageReleaseNotes>https://github.com/jihadkhawaja/mobilechat.server/releases</PackageReleaseNotes>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
