@@ -38,6 +38,7 @@ public static class ServiceCollectionEx
         JWTEnabled = jwtAuthentication;
         AutoMigrateDatabase = autoMigrateDatabase;
 
+        //get jwt secret key from appsettings
         string jwtKey = Configuration.GetSection("Secrets")["Jwt"];
 
         if (string.IsNullOrWhiteSpace(jwtKey))
