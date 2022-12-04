@@ -60,7 +60,7 @@ public static class ServiceCollectionEx
             }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes());
+                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
                 options.TokenValidationParameters.ValidateIssuer = false;
                 options.TokenValidationParameters.ValidateAudience = false;
                 options.TokenValidationParameters.ValidateLifetime = true;
