@@ -1,37 +1,20 @@
-name: Nuget
+name: Nuget Push
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-    
-  workflow_dispatch:
-
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
 jobs:
   build:
     runs-on: ubuntu-latest    
-    outputs: 
-      Version: ${{ steps.gitversion.outputs.SemVer }}
-      CommitsSinceVersionSource: ${{ steps.gitversion.outputs.CommitsSinceVersionSource }} 
 
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0 
-        
-    #calculate the new version with GitVersion  
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.7
-      with:
-        versionSpec: 5.x
-    - name: Determine Version
-      uses: gittools/actions/gitversion/execute@v0.9.7
-      id: gitversion
-    - name: Display GitVersion outputs
-      run: |
-        echo "Version: ${{ steps.gitversion.outputs.SemVer }}"
-        echo "CommitsSinceVersionSource: ${{ steps.gitversion.outputs.CommitsSinceVersionSource }}"
+    # Set Version    
+    - name: Set VERSION variable from tag
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
     
     #Build/pack the project
     - name: Setup .NET
@@ -41,7 +24,7 @@ jobs:
           6.0.x
           7.0.x
     - name: Build and Pack NuGet package
-      run: dotnet pack src/jihadkhawaja.mobilechat.server/jihadkhawaja.mobilechat.server.csproj -p:Version='${{ steps.gitversion.outputs.SemVer }}' -c Release
+      run: dotnet pack src/jihadkhawaja.mobilechat.server/jihadkhawaja.mobilechat.server.csproj -p:Version=${VERSION} -c Release
     - name: Upload NuGet package to GitHub
       uses: actions/upload-artifact@v2
       with:
@@ -62,30 +45,7 @@ jobs:
     - name: Prep packages
       run: dotnet nuget add source --username jihadkhawaja --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/jihadkhawaja/index.json"
     - name: Push package to GitHub packages
-      # Only release if there has been a commit/version change  
-      if: needs.build.outputs.CommitsSinceVersionSource > 0
       run: dotnet nuget push nugetPackage/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }}  --source "github"
-    
-    #Create release
-    - name: Create Release
-      # needs.build.outputs.CommitsSinceVersionSource > 0
-      # Only release if there has been a commit/version change
-      if: 1 == 0
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ needs.build.outputs.Version }}
-        release_name: Release ${{ needs.build.outputs.Version }}
-    - name: Create Release
-      # Only release if there has been a commit/version change
-      if: needs.build.outputs.CommitsSinceVersionSource > 0
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ needs.build.outputs.Version }}
-        name: Release ${{ needs.build.outputs.Version }}
-        artifacts: "nugetPackage/*"
-        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Publish nuget package
       run: dotnet nuget push nugetPackage/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
