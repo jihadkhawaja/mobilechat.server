@@ -12,6 +12,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0 
+        
     # Set Version    
     - name: Set VERSION variable from tag
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
@@ -31,12 +32,6 @@ jobs:
         name: nugetPackage
         path: src/jihadkhawaja.mobilechat.server/bin/Release/
         
-  release:
-    runs-on: ubuntu-latest    
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    
-    steps:  
     #Push NuGet package to GitHub packages
     - name: Download nuget package artifact
       uses: actions/download-artifact@v1.0.0
@@ -49,10 +44,9 @@ jobs:
       
     #Create release
     - name: Create Release
-      if: needs.build.outputs.CommitsSinceVersionSource > 0
       uses: ncipollo/release-action@v1
       with:
-        tag: ${VERSION}
+        tag: ${{ needs.build.outputs.Version }}
         name: Release ${{ needs.build.outputs.Version }}
         artifacts: "nugetPackage/*"
         token: ${{ secrets.GITHUB_TOKEN }}
