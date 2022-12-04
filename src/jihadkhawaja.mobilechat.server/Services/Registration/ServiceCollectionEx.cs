@@ -38,6 +38,13 @@ public static class ServiceCollectionEx
         JWTEnabled = jwtAuthentication;
         AutoMigrateDatabase = autoMigrateDatabase;
 
+        string jwtKey = Configuration.GetSection("Secrets")["Jwt"];
+
+        if (string.IsNullOrWhiteSpace(jwtKey))
+        {
+            throw new NullReferenceException(nameof(jwtKey));
+        }
+
         services.AddScoped<IMobileChatService, MobileChatService>();
         //signalr
         services.AddSignalR();
@@ -53,7 +60,7 @@ public static class ServiceCollectionEx
             }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Secrets")["Jwt"]));
+                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes());
                 options.TokenValidationParameters.ValidateIssuer = false;
                 options.TokenValidationParameters.ValidateAudience = false;
                 options.TokenValidationParameters.ValidateLifetime = true;
