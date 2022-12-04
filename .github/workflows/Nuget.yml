@@ -47,5 +47,15 @@ jobs:
     - name: Push package to GitHub packages
       run: dotnet nuget push nugetPackage/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }}  --source "github"
       
+    #Create release
+    - name: Create Release
+      if: needs.build.outputs.CommitsSinceVersionSource > 0
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${VERSION}
+        name: Release ${{ needs.build.outputs.Version }}
+        artifacts: "nugetPackage/*"
+        token: ${{ secrets.GITHUB_TOKEN }}
+      
     - name: Publish nuget package
       run: dotnet nuget push nugetPackage/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
