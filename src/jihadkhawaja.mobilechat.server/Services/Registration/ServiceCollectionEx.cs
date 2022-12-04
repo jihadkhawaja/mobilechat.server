@@ -45,7 +45,6 @@ public static class ServiceCollectionEx
             throw new NullReferenceException(nameof(jwtKey));
         }
 
-        services.AddScoped<IMobileChatService, MobileChatService>();
         //signalr
         services.AddSignalR();
         //database
