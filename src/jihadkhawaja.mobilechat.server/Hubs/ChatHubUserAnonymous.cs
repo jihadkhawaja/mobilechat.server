@@ -28,6 +28,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
         public async Task<string?> GetUserDisplayNameByEmail(string email)
         {
+            email = email.ToLower();
             User? user = await UserService.ReadFirst(x => x.Email == email);
 
             if (user == null)
@@ -86,6 +87,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 }
 
                 Guid ConnectorUserId = cuser.Id;
+                friendEmailorusername = friendEmailorusername.ToLower();
 
                 if (PatternMatchHelper.IsEmail(friendEmailorusername))
                 {
@@ -169,6 +171,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                     return false;
                 }
                 Guid ConnectorUserId = dbuser.Id;
+                friendEmailorusername = friendEmailorusername.ToLower();
 
                 if (PatternMatchHelper.IsEmail(friendEmailorusername))
                 {
