@@ -9,11 +9,24 @@ namespace jihadkhawaja.mobilechat.server.Hubs
     {
         public async Task<dynamic?> SignUp(string displayname, string username, string email, string password)
         {
+            if (!PatternMatchHelper.IsUsername(username) 
+                || !PatternMatchHelper.IsNormalPassword(password))
+            {
+                return null;
+            }
+
             username = username.ToLower();
 
             if (!string.IsNullOrWhiteSpace(email))
             {
-                email = email.ToLower();
+                if (PatternMatchHelper.IsEmail(email))
+                {
+                    email = email.ToLower();
+                }
+                else
+                {
+                    email = string.Empty;
+                }
             }
 
             if (await UserService.ReadFirst(x => x.Username == username) != null)
