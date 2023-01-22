@@ -56,7 +56,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 for (int i = 0; i < usernames.Length; i++)
                 {
-                    User? userToAdd = await UserService.ReadFirst(x => x.Username == usernames[i]);
+                    User? userToAdd = await UserService.ReadFirst(x => x.Username == usernames[i].ToLower());
 
                     if (userToAdd is null)
                     {
