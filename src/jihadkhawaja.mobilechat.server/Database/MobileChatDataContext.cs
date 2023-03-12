@@ -15,14 +15,23 @@ namespace jihadkhawaja.mobilechat.server.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
+            if(string.IsNullOrWhiteSpace(ServiceCollectionEx.DbConnectionStringKey))
+            {
+                throw new ArgumentException($"Key \"{nameof(ServiceCollectionEx.DbConnectionStringKey)}\" can't be empty");
+            }
+            else if(string.IsNullOrWhiteSpace(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey)))
+            {
+                throw new ArgumentException($"Connection string value of \"{nameof(ServiceCollectionEx.DbConnectionStringKey)}\" is empty or doesn't exist");
+            }
+
             switch (ServiceCollectionEx.SelectedDatabase)
             {
                 case ServiceCollectionEx.DatabaseEnum.Postgres:
-                    options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), b =>
+                    options.UseNpgsql(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey), b =>
                     b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
                     break;
                 case ServiceCollectionEx.DatabaseEnum.SqlServer:
-                    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), b =>
+                    options.UseSqlServer(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey), b =>
                     b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
                     break;
                 default:
