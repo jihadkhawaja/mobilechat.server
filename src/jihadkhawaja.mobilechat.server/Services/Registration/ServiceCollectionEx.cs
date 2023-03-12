@@ -22,6 +22,7 @@ public static class ServiceCollectionEx
     public static bool JWTEnabled { get; private set; } = true;
     public static DatabaseEnum SelectedDatabase { get; private set; }
     public static string CurrentExecutionAssemblyName { get; private set; }
+    public static string DbConnectionStringKey { get; private set; }
     private static bool AutoMigrateDatabase { get; set; }
     /// <summary>
     /// Add MobileChat Server Services
@@ -30,9 +31,11 @@ public static class ServiceCollectionEx
     /// <param name="config"></param>
     /// <param name="databaseEnum">Database type (Postgres, SqlServer..etc.)</param>
     /// <param name="executionClassType">Main execuation class (Program or Startup..etc.)</param>
-    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, Type executionClassType, DatabaseEnum databaseEnum, bool autoMigrateDatabase = true, bool jwtAuthentication = true)
+    public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, Type executionClassType,
+        DatabaseEnum databaseEnum, bool autoMigrateDatabase = true, bool jwtAuthentication = true, string dbConnectionStringKey = "DefaultConnection")
     {
         Configuration = config;
+        DbConnectionStringKey = dbConnectionStringKey;
         SelectedDatabase = databaseEnum;
         CurrentExecutionAssemblyName = System.Reflection.Assembly.GetAssembly(executionClassType).GetName().Name;
         JWTEnabled = jwtAuthentication;
@@ -51,7 +54,7 @@ public static class ServiceCollectionEx
         //database
         services.AddDbContext<DataContext>();
         //auth
-        if(JWTEnabled)
+        if (JWTEnabled)
         {
             services.AddAuthentication(options =>
             {
@@ -101,7 +104,7 @@ public static class ServiceCollectionEx
     public static void UseMobileChatServices(this WebApplication app)
     {
         //auto-migrate database
-        if(AutoMigrateDatabase)
+        if (AutoMigrateDatabase)
         {
             using (IServiceScope scope = app.Services.CreateScope())
             {
