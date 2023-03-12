@@ -113,7 +113,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             {
                 return null;
             }
-            HashSet<Message> msgs = messages.Skip(index).Take(range).ToHashSet();
+            HashSet<Message> msgs = messages.Skip(index).TakeLast(range).ToHashSet();
             return msgs.ToArray();
         }
     }
