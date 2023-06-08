@@ -306,5 +306,23 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return await UserFriendsService.Delete(x => x.UserId == friendId && x.FriendUserId == ConnectorUserId && !x.IsAccepted);
         }
+        public async Task<IEnumerable<User>?> SearchUser(string query)
+        {
+            IEnumerable<User>? users = await UserService.Read(x =>
+            x.Username.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+            || x.DisplayName.Contains(query, StringComparison.InvariantCultureIgnoreCase));
+
+            if (users == null)
+            {
+                return null;
+            }
+
+            return users.Select(x =>
+            new User
+            {
+                DisplayName = x.DisplayName,
+                Username = x.Username
+            });
+        }
     }
 }
