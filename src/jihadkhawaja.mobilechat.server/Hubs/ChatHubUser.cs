@@ -92,7 +92,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 Guid ConnectorUserId = cuser.Id;
                 friendEmailorusername = friendEmailorusername.ToLower();
 
-                if (PatternMatchHelper.IsEmail(friendEmailorusername))
+                if (PatternMatchHelper.IsValidEmail(friendEmailorusername))
                 {
                     //get user id from email
                     User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
@@ -176,7 +176,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 Guid ConnectorUserId = dbuser.Id;
                 friendEmailorusername = friendEmailorusername.ToLower();
 
-                if (PatternMatchHelper.IsEmail(friendEmailorusername))
+                if (PatternMatchHelper.IsValidEmail(friendEmailorusername))
                 {
                     //get user id from email
                     User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
