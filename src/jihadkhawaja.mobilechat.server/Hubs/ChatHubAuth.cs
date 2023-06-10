@@ -11,8 +11,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
     {
         public async Task<dynamic?> SignUp(string displayname, string username, string email, string password)
         {
-            if (!PatternMatchHelper.IsUsername(username)
-                || !PatternMatchHelper.IsNormalPassword(password))
+            if (!PatternMatchHelper.IsValidUsername(username)
+                || !PatternMatchHelper.IsValidPassword(password))
             {
                 return null;
             }
@@ -21,7 +21,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             if(!string.IsNullOrWhiteSpace(email))
             {
-                if (PatternMatchHelper.IsEmail(email))
+                if (PatternMatchHelper.IsValidEmail(email))
                 {
                     email = email.ToLower();
                 }
@@ -77,7 +77,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         {
             emailorusername = emailorusername.ToLower();
 
-            if (PatternMatchHelper.IsEmail(emailorusername))
+            if (PatternMatchHelper.IsValidEmail(emailorusername))
             {
                 User? user = await UserService.ReadFirst(x => x.Email == emailorusername);
 
@@ -176,7 +176,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<bool> ChangePassword(string emailorusername, string oldpassword, string newpassword)
         {
-            if (PatternMatchHelper.IsEmail(emailorusername))
+            if (PatternMatchHelper.IsValidEmail(emailorusername))
             {
                 User? registeredUser = await UserService.ReadFirst(x => x.Email == emailorusername);
 

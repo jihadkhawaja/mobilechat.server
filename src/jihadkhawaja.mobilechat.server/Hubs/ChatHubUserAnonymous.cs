@@ -89,7 +89,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 Guid ConnectorUserId = cuser.Id;
                 friendEmailorusername = friendEmailorusername.ToLower();
 
-                if (PatternMatchHelper.IsEmail(friendEmailorusername))
+                if (PatternMatchHelper.IsValidEmail(friendEmailorusername))
                 {
                     //get user id from email
                     User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
@@ -173,7 +173,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 Guid ConnectorUserId = dbuser.Id;
                 friendEmailorusername = friendEmailorusername.ToLower();
 
-                if (PatternMatchHelper.IsEmail(friendEmailorusername))
+                if (PatternMatchHelper.IsValidEmail(friendEmailorusername))
                 {
                     //get user id from email
                     User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
@@ -305,6 +305,24 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             Guid ConnectorUserId = user.Id;
 
             return await UserFriendsService.Delete(x => x.UserId == friendId && x.FriendUserId == ConnectorUserId && !x.IsAccepted);
+        }
+        public async Task<IEnumerable<User>?> SearchUser(string query)
+        {
+            IEnumerable<User>? users = await UserService.Read(x =>
+            x.Username.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+            || x.DisplayName.Contains(query, StringComparison.InvariantCultureIgnoreCase));
+
+            if (users == null)
+            {
+                return null;
+            }
+
+            return users.Select(x =>
+            new User
+            {
+                DisplayName = x.DisplayName,
+                Username = x.Username
+            });
         }
     }
 }
