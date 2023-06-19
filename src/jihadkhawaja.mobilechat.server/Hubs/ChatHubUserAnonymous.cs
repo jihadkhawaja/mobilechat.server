@@ -306,11 +306,12 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             return await UserFriendsService.Delete(x => x.UserId == friendId && x.FriendUserId == ConnectorUserId && !x.IsAccepted);
         }
-        public async Task<IEnumerable<User>?> SearchUser(string query)
+        public async Task<IEnumerable<User>?> SearchUser(string query, int maxResult = 20)
         {
-            IEnumerable<User>? users = await UserService.Read(x =>
+            IEnumerable<User>? users = (await UserService.Read(x =>
             x.Username.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-            || x.DisplayName.Contains(query, StringComparison.InvariantCultureIgnoreCase));
+            || x.DisplayName.Contains(query, StringComparison.InvariantCultureIgnoreCase)))
+            .OrderBy(x => x.Username).Take(maxResult);
 
             if (users == null)
             {
