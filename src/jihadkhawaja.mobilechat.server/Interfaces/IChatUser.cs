@@ -14,6 +14,6 @@ namespace jihadkhawaja.mobilechat.server.Interfaces
         Task<bool> GetUserIsFriend(Guid userId, Guid friendId);
         Task<bool> AcceptFriend(Guid friendId);
         Task<bool> DenyFriend(Guid friendId);
-        Task<IEnumerable<User>?> SearchUser(string query);
+        Task<IEnumerable<User>?> SearchUser(string query, int maxResult = 20);
     }
 }
