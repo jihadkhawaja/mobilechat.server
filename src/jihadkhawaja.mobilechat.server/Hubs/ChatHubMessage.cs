@@ -27,8 +27,10 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             }
 
             //save msg to db
-            message.Sent = true;
+            message.Id = Guid.NewGuid();
+            message.DateCreated = DateTime.UtcNow;
             message.DateSent = DateTime.UtcNow;
+            message.Sent = true;
 
             Message[] messages = new Message[1] { message };
             if (await MessageService.Create(messages))
