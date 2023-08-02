@@ -1,6 +1,13 @@
 name: Nuget Push
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag to publish v[0-9]+.[0-9]+.[0-9]+*'
+        required: true
+        default: ''
+        type: string
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
@@ -13,9 +20,22 @@ jobs:
       with:
         fetch-depth: 0 
         
-    # Set Version    
-    - name: Set VERSION variable from tag
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+    - name: Set tag from input
+      if: ${{ github.event.inputs.version != '' }}
+      env:
+        TAG: ${{ github.event.inputs.version }}
+      run: echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
+    - name: Set version variable from tag
+      if: ${{ github.ref_type == 'tag' }}
+      env:
+        TAG: ${{ github.ref_name }}
+      run: echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
+    - name: VERSION to job output
+      id: output-version
+      run: |
+        echo "VERSION=${{ env.VERSION }}" >> $GITHUB_OUTPUT
     
     #Build/pack the project
     - name: Setup .NET
