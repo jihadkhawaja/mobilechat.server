@@ -14,7 +14,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest    
-
+    env:
+        VERSION: 1.0.0
+    outputs:
+        VERSION: ${{ steps.output-version.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -62,14 +65,21 @@ jobs:
     - name: Push package to GitHub packages
       run: dotnet nuget push nugetPackage/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }}  --source "github"
       
-    #Create release
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ needs.build.outputs.Version }}
-        name: Release ${{ needs.build.outputs.Version }}
-        artifacts: "nugetPackage/*"
-        token: ${{ secrets.GITHUB_TOKEN }}
-      
     - name: Publish nuget package
       run: dotnet nuget push nugetPackage/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+
+  Release: 
+    runs-on: ubuntu-latest 
+    needs: build
+    steps:
+      - name: Download nuget package artifact
+        uses: actions/download-artifact@v1.0.0
+        with:
+          name: nugetPackage
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.build.outputs.VERSION }}
+          name: Release ${{ needs.build.outputs.VERSION }}
+          artifacts: "nugetPackage/*.nupkg"
+          token: ${{ secrets.GITHUB_TOKEN }}
