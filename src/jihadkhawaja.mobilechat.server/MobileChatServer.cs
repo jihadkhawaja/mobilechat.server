@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-public static class ServiceCollectionEx
+public static class MobileChatServer
 {
     public enum DatabaseEnum
     {
@@ -19,7 +19,6 @@ public static class ServiceCollectionEx
         SqlServer
     }
     public static IConfiguration? Configuration { get; private set; }
-    public static bool JWTEnabled { get; private set; } = true;
     public static DatabaseEnum SelectedDatabase { get; private set; }
     public static string CurrentExecutionAssemblyName { get; private set; }
     public static string DbConnectionStringKey { get; private set; }
@@ -32,13 +31,12 @@ public static class ServiceCollectionEx
     /// <param name="databaseEnum">Database type (Postgres, SqlServer..etc.)</param>
     /// <param name="executionClassType">Main execuation class (Program or Startup..etc.)</param>
     public static IServiceCollection AddMobileChatServices(this IServiceCollection services, IConfiguration config, Type executionClassType,
-        DatabaseEnum databaseEnum, bool autoMigrateDatabase = true, bool jwtAuthentication = true, string dbConnectionStringKey = "DefaultConnection")
+        DatabaseEnum databaseEnum, bool autoMigrateDatabase = true, string dbConnectionStringKey = "DefaultConnection")
     {
         Configuration = config;
         DbConnectionStringKey = dbConnectionStringKey;
         SelectedDatabase = databaseEnum;
         CurrentExecutionAssemblyName = System.Reflection.Assembly.GetAssembly(executionClassType).GetName().Name;
-        JWTEnabled = jwtAuthentication;
         AutoMigrateDatabase = autoMigrateDatabase;
 
         //get jwt secret key from appsettings
@@ -54,39 +52,36 @@ public static class ServiceCollectionEx
         //database
         services.AddDbContext<DataContext>();
         //auth
-        if (JWTEnabled)
+        services.AddAuthentication(options =>
         {
-            services.AddAuthentication(options =>
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters.ValidateIssuerSigningKey = true;
+            options.TokenValidationParameters.IssuerSigningKey =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            options.TokenValidationParameters.ValidateIssuer = false;
+            options.TokenValidationParameters.ValidateAudience = false;
+            options.TokenValidationParameters.ValidateLifetime = true;
+            options.Events = new JwtBearerEvents
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-                options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-                options.TokenValidationParameters.ValidateIssuer = false;
-                options.TokenValidationParameters.ValidateAudience = false;
-                options.TokenValidationParameters.ValidateLifetime = true;
-                options.Events = new JwtBearerEvents
+                OnMessageReceived = context =>
                 {
-                    OnMessageReceived = context =>
-                    {
-                        var accessToken = context.Request.Query["access_token"];
+                    var accessToken = context.Request.Query["access_token"];
 
-                        // If the request is for our hub...
-                        var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                            (path.StartsWithSegments("/chathub")))
-                        {
-                            // Read the token out of the query string
-                            context.Token = accessToken;
-                        }
-                        return Task.CompletedTask;
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        (path.StartsWithSegments("/chathub")))
+                    {
+                        // Read the token out of the query string
+                        context.Token = accessToken;
                     }
-                };
-            });
-            services.AddAuthorization();
-        }
+                    return Task.CompletedTask;
+                }
+            };
+        });
+        services.AddAuthorization();
 
         services.AddScoped<IEntity<User>, EntityService<User>>();
         services.AddScoped<IEntity<UserFriend>, EntityService<UserFriend>>();
@@ -100,7 +95,6 @@ public static class ServiceCollectionEx
     /// Use MobileChat Server Services
     /// </summary>
     /// <param name="app"></param>
-    /// <param name="jwtEnabled"></param>
     public static void UseMobileChatServices(this WebApplication app)
     {
         //auto-migrate database
@@ -113,17 +107,10 @@ public static class ServiceCollectionEx
             }
         }
 
-        if (JWTEnabled)
-        {
-            app.UseAuthentication();
-            app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-            //hubs
-            app.MapHub<ChatHub>("/chathub");
-        }
-        else
-        {
-            app.MapHub<ChatHubAnonymous>("/chathub");
-        }
+        //hubs
+        app.MapHub<ChatHub>("/chathub");
     }
 }

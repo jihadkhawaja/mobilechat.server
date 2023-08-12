@@ -7,6 +7,7 @@ namespace jihadkhawaja.mobilechat.server.Interfaces
         Task<string?> GetUserDisplayName(Guid userId);
         Task<string?> GetUserDisplayNameByEmail(string email);
         Task<string?> GetUserUsername(Guid userId);
+        Task<bool> IsUserOnline(Guid userId);
         Task<bool> AddFriend(string friendEmailorusername);
         Task<bool> RemoveFriend(string friendEmailorusername);
         Task<UserFriend[]?> GetUserFriends(Guid userId);
