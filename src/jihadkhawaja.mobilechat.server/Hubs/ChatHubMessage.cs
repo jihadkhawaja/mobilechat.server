@@ -60,28 +60,22 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             return false;
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<bool> UpdateMessage(Message message)
+        public async Task<bool> SetMessageAsSeen(Guid messageid)
         {
-            if (message == null)
+            if (messageid == Guid.Empty)
             {
                 return false;
             }
 
-            if (message.SenderId == Guid.Empty)
-            {
-                return false;
-            }
+            Message dbMessage = await MessageService.ReadFirst(x => x.Id == messageid);
+            dbMessage.DateSeen = DateTime.UtcNow;
+            dbMessage.Seen = true;
 
-            if (string.IsNullOrEmpty(message.Content) || string.IsNullOrWhiteSpace(message.Content))
-            {
-                return false;
-            }
-
-            Message[] messages = new Message[1] { message };
+            Message[] messages = new Message[1] { dbMessage };
             //save msg to db
             if (await MessageService.Update(messages))
             {
-                User[]? users = await GetChannelUsers(message.ChannelId);
+                User[]? users = await GetChannelUsers(dbMessage.ChannelId);
                 if (users is null)
                 {
                     return false;
@@ -93,7 +87,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                         continue;
                     }
 
-                    await Clients.Client(user.ConnectionId).SendAsync("ReceiveMessage", message);
+                    await Clients.Client(user.ConnectionId).SendAsync("UpdateMessage", dbMessage);
                 }
 
                 return true;
@@ -104,19 +98,19 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<Message[]?> ReceiveMessageHistory(Guid channelId)
         {
-            HashSet<Message> msgs = (await MessageService.Read(x => x.ChannelId == channelId)).ToHashSet();
-            return msgs.ToArray();
+            Message[] msgs = (await MessageService.Read(x => x.ChannelId == channelId)).ToArray();
+            return msgs;
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<Message[]?> ReceiveMessageHistoryRange(Guid channelId, int index, int range)
+        public async Task<Message[]?> ReceiveMessageHistoryRange(Guid channelId, int range)
         {
             Message[]? messages = await ReceiveMessageHistory(channelId);
             if (messages is null)
             {
                 return null;
             }
-            HashSet<Message> msgs = messages.Skip(index).TakeLast(range).ToHashSet();
-            return msgs.ToArray();
+            Message[] msgs = messages.TakeLast(range).ToArray();
+            return msgs;
         }
     }
 }
