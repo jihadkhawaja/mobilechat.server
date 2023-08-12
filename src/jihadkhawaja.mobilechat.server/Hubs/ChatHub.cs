@@ -67,6 +67,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                     User? connectedUser = await UserService.ReadFirst(x => x.Token == Token);
                     if (connectedUser != null)
                     {
+                        connectedUser.ConnectionId = null;
                         connectedUser.IsOnline = false;
 
                         User[] connectedUsers = new User[1] { connectedUser };

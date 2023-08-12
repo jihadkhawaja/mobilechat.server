@@ -15,24 +15,24 @@ namespace jihadkhawaja.mobilechat.server.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            if(string.IsNullOrWhiteSpace(ServiceCollectionEx.DbConnectionStringKey))
+            if(string.IsNullOrWhiteSpace(MobileChatServer.DbConnectionStringKey))
             {
-                throw new ArgumentException($"Key \"{nameof(ServiceCollectionEx.DbConnectionStringKey)}\" can't be empty");
+                throw new ArgumentException($"Key \"{nameof(MobileChatServer.DbConnectionStringKey)}\" can't be empty");
             }
-            else if(string.IsNullOrWhiteSpace(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey)))
+            else if(string.IsNullOrWhiteSpace(Configuration.GetConnectionString(MobileChatServer.DbConnectionStringKey)))
             {
-                throw new ArgumentException($"Connection string value of \"{nameof(ServiceCollectionEx.DbConnectionStringKey)}\" is empty or doesn't exist");
+                throw new ArgumentException($"Connection string value of \"{nameof(MobileChatServer.DbConnectionStringKey)}\" is empty or doesn't exist");
             }
 
-            switch (ServiceCollectionEx.SelectedDatabase)
+            switch (MobileChatServer.SelectedDatabase)
             {
-                case ServiceCollectionEx.DatabaseEnum.Postgres:
-                    options.UseNpgsql(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey), b =>
-                    b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
+                case MobileChatServer.DatabaseEnum.Postgres:
+                    options.UseNpgsql(Configuration.GetConnectionString(MobileChatServer.DbConnectionStringKey), b =>
+                    b.MigrationsAssembly(MobileChatServer.CurrentExecutionAssemblyName));
                     break;
-                case ServiceCollectionEx.DatabaseEnum.SqlServer:
-                    options.UseSqlServer(Configuration.GetConnectionString(ServiceCollectionEx.DbConnectionStringKey), b =>
-                    b.MigrationsAssembly(ServiceCollectionEx.CurrentExecutionAssemblyName));
+                case MobileChatServer.DatabaseEnum.SqlServer:
+                    options.UseSqlServer(Configuration.GetConnectionString(MobileChatServer.DbConnectionStringKey), b =>
+                    b.MigrationsAssembly(MobileChatServer.CurrentExecutionAssemblyName));
                     break;
                 default:
                     throw new NotImplementedException();

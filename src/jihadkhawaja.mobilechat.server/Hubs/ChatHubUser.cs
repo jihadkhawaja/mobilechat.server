@@ -238,7 +238,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<UserFriend[]?> GetUserFriends(Guid userId)
         {
-            return (await UserFriendsService.Read(x => x.UserId == userId && x.IsAccepted || x.FriendUserId == userId && x.IsAccepted)).ToArray();
+            return (await UserFriendsService.Read(x => (x.UserId == userId && x.IsAccepted) || (x.FriendUserId == userId && x.IsAccepted))).ToArray();
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<UserFriend[]?> GetUserFriendRequests(Guid userId)
@@ -312,8 +312,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IEnumerable<User>?> SearchUser(string query, int maxResult = 20)
         {
-            IEnumerable<User>? users = (await UserService.Read(x => 
-            x.Username.Contains(query, StringComparison.InvariantCultureIgnoreCase) 
+            IEnumerable<User>? users = (await UserService.Read(x =>
+            x.Username.Contains(query, StringComparison.InvariantCultureIgnoreCase)
             || x.DisplayName.Contains(query, StringComparison.InvariantCultureIgnoreCase)))
             .OrderBy(x => x.Username).Take(maxResult);
 
@@ -322,12 +322,28 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return null;
             }
 
-            return users.Select(x => 
+            return users.Select(x =>
             new User
-            { 
+            {
                 DisplayName = x.DisplayName,
-                Username = x.Username 
+                Username = x.Username
             });
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<bool> IsUserOnline(Guid userId)
+        {
+            User? user = await UserService.ReadFirst(x => x.Id == userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+            else if (string.IsNullOrWhiteSpace(user.Username))
+            {
+                return false;
+            }
+
+            return user.IsOnline;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             username = username.ToLower();
 
-            if(!string.IsNullOrWhiteSpace(email))
+            if (!string.IsNullOrWhiteSpace(email))
             {
                 if (PatternMatchHelper.IsValidEmail(email))
                 {
@@ -51,12 +51,12 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 Permission = 0
             };
 
-            if (ServiceCollectionEx.Configuration == null)
+            if (MobileChatServer.Configuration == null)
             {
                 return null;
             }
 
-            var generatedToken = await TokenGenerator.GenerateJwtToken(user, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
+            var generatedToken = await TokenGenerator.GenerateJwtToken(user, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
             user.Token = generatedToken.Access_Token;
 
             User[] users = new User[1] { user };
@@ -93,7 +93,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 {
                     return null;
                 }
-                else if (ServiceCollectionEx.Configuration == null)
+                else if (MobileChatServer.Configuration == null)
                 {
                     return null;
                 }
@@ -103,7 +103,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
 
-                var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
+                var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
                 registeredUser.Token = generatedToken.Access_Token;
 
                 User[] users = new User[1] { registeredUser };
@@ -128,11 +128,11 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 {
                     return null;
                 }
-                else if(!CryptographyHelper.ComparePassword(password, user.Password))
+                else if (!CryptographyHelper.ComparePassword(password, user.Password))
                 {
                     return null;
                 }
-                else if(ServiceCollectionEx.Configuration == null)
+                else if (MobileChatServer.Configuration == null)
                 {
                     return null;
                 }
@@ -142,7 +142,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
 
-                var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
+                var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
                 registeredUser.Token = generatedToken.Access_Token;
 
                 User[] users = new User[1] { registeredUser };
@@ -165,10 +165,10 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return null;
             }
 
-            var generatedToken = await TokenGenerator.GenerateJwtToken(user, ServiceCollectionEx.Configuration.GetSection("Secrets")["Jwt"]);
+            var generatedToken = await TokenGenerator.GenerateJwtToken(user, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
             user.Token = generatedToken.Access_Token;
 
-            User[] users = new User[1] { user }; 
+            User[] users = new User[1] { user };
             await UserService.Update(users);
 
             return user.Token;
