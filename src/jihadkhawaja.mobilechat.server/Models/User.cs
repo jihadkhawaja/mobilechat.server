@@ -4,7 +4,6 @@ namespace jihadkhawaja.mobilechat.server.Models
 {
     public class User : EntityBase
     {
-        [Required]
         public string? ConnectionId { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
