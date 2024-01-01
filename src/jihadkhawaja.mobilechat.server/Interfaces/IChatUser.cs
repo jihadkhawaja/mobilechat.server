@@ -5,8 +5,10 @@ namespace jihadkhawaja.mobilechat.server.Interfaces
     public interface IChatUser
     {
         Task<string?> GetUserDisplayName(Guid userId);
+        Task<string?> GetCurrentUserDisplayName();
         Task<string?> GetUserDisplayNameByEmail(string email);
         Task<string?> GetUserUsername(Guid userId);
+        Task<string?> GetCurrentUserUsername();
         Task<bool> IsUserOnline(Guid userId);
         Task<bool> AddFriend(string friendEmailorusername);
         Task<bool> RemoveFriend(string friendEmailorusername);

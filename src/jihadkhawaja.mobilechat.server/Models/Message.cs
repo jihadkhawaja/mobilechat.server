@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace jihadkhawaja.mobilechat.server.Models
 {
-    public class Message
+    public class Message : EntityBase
     {
-        [Key]
-        public Guid Id { get; set; }
         [Required]
         public Guid SenderId { get; set; }
         [Required]
@@ -19,6 +17,5 @@ namespace jihadkhawaja.mobilechat.server.Models
         public DateTime? DateSeen { get; set; }
         [Required]
         public string? Content { get; set; }
-        public DateTime? DateCreated { get; set; }
     }
 }

@@ -4,6 +4,8 @@ using jihadkhawaja.mobilechat.server.Interfaces;
 using jihadkhawaja.mobilechat.server.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace jihadkhawaja.mobilechat.server.Hubs
 {
@@ -40,15 +42,15 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
             User user = new()
             {
-                Id = Guid.NewGuid(),
                 Username = username,
                 Email = email,
                 Password = encryptedPassword,
                 DisplayName = displayname,
                 ConnectionId = Context.ConnectionId,
-                DateCreated = DateTime.UtcNow,
                 IsOnline = true,
-                Permission = 0
+                Role = "Member",
+                LastLoginDate = DateTimeOffset.UtcNow,
+                DateUpdated = DateTimeOffset.UtcNow
             };
 
             if (MobileChatServer.Configuration == null)
@@ -57,7 +59,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
             }
 
             var generatedToken = await TokenGenerator.GenerateJwtToken(user, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
-            user.Token = generatedToken.Access_Token;
+            string token = generatedToken.Access_Token;
 
             User[] users = new User[1] { user };
             if (await UserService.Create(users))
@@ -65,7 +67,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 var result = new
                 {
                     user.Id,
-                    user.Token,
+                    token,
                 };
 
                 return result;
@@ -102,9 +104,11 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
+                registeredUser.LastLoginDate = DateTimeOffset.UtcNow;
+                registeredUser.DateUpdated = DateTimeOffset.UtcNow;
 
                 var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
-                registeredUser.Token = generatedToken.Access_Token;
+                string token = generatedToken.Access_Token;
 
                 User[] users = new User[1] { registeredUser };
                 await UserService.Update(users);
@@ -112,7 +116,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 var result = new
                 {
                     registeredUser.Id,
-                    registeredUser.Token,
+                    token,
                 };
 
                 return result;
@@ -141,9 +145,11 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                 registeredUser.ConnectionId = Context.ConnectionId;
                 registeredUser.IsOnline = true;
+                registeredUser.LastLoginDate = DateTimeOffset.UtcNow;
+                registeredUser.DateUpdated = DateTimeOffset.UtcNow;
 
                 var generatedToken = await TokenGenerator.GenerateJwtToken(registeredUser, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
-                registeredUser.Token = generatedToken.Access_Token;
+                string token = generatedToken.Access_Token;
 
                 User[] users = new User[1] { registeredUser };
                 await UserService.Update(users);
@@ -151,27 +157,46 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 var result = new
                 {
                     registeredUser.Id,
-                    registeredUser.Token,
+                    token,
                 };
 
                 return result;
             }
         }
-        public async Task<string> RefreshSession(string token)
+        public async Task<dynamic?> RefreshSession(string oldtoken)
         {
-            User? user = await UserService.ReadFirst(x => x.Token == token);
+            //get claims from old token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.ReadJwtToken(oldtoken);
+            var claims = token.Claims;
+
+            //get user from claims
+            Guid.TryParse(claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value, out Guid userId);
+            if (userId == Guid.Empty)
+            {
+                return null;
+            }
+
+            User? user = await UserService.ReadFirst(x => x.Id == userId);
             if (user == null)
             {
                 return null;
             }
 
             var generatedToken = await TokenGenerator.GenerateJwtToken(user, MobileChatServer.Configuration.GetSection("Secrets")["Jwt"]);
-            user.Token = generatedToken.Access_Token;
+            string newtoken = generatedToken.Access_Token;
 
+            user.DateUpdated = DateTimeOffset.UtcNow;
             User[] users = new User[1] { user };
             await UserService.Update(users);
 
-            return user.Token;
+            var result = new
+            {
+                Id = user.Id,
+                Token = newtoken,
+            };
+
+            return result;
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<bool> ChangePassword(string emailorusername, string oldpassword, string newpassword)
@@ -197,6 +222,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 string encryptedPassword = CryptographyHelper.SecurePassword(newpassword);
                 registeredUser.Password = encryptedPassword;
 
+                registeredUser.LastLoginDate = DateTimeOffset.UtcNow;
+                registeredUser.DateUpdated = DateTimeOffset.UtcNow;
                 User[] users = new User[1] { registeredUser };
                 await UserService.Update(users);
 
@@ -223,6 +250,8 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 string encryptedPassword = CryptographyHelper.SecurePassword(newpassword);
                 registeredUser.Password = encryptedPassword;
 
+                registeredUser.LastLoginDate = DateTimeOffset.UtcNow;
+                registeredUser.DateUpdated = DateTimeOffset.UtcNow;
                 User[] users = new User[1] { registeredUser };
                 await UserService.Update(users);
 
