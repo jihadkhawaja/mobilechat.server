@@ -3,6 +3,8 @@ using jihadkhawaja.mobilechat.server.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace jihadkhawaja.mobilechat.server.Hubs
 {
@@ -39,7 +41,14 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 //set user IsOnline true when he connects or reconnects
                 if (!string.IsNullOrWhiteSpace(Token))
                 {
-                    User? connectedUser = await UserService.ReadFirst(x => x.Token == Token);
+                    //get user id from token
+                    JwtSecurityTokenHandler tokenHandler = new();
+                    JwtSecurityToken jwtToken = tokenHandler.ReadJwtToken(Token);
+                    var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+                    Guid ConnectorUserId = Guid.Parse(userIdClaim.Value);
+
+                    User? connectedUser = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
                     if (connectedUser != null)
                     {
                         connectedUser.ConnectionId = Context.ConnectionId;
@@ -55,26 +64,14 @@ namespace jihadkhawaja.mobilechat.server.Hubs
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            HttpContext? hc = Context.GetHttpContext();
-
-            if (hc != null)
+            User? connectedUser = await UserService.ReadFirst(x => x.ConnectionId == Context.ConnectionId);
+            if (connectedUser != null)
             {
-                string Token = hc.Request.Query["access_token"];
+                connectedUser.ConnectionId = null;
+                connectedUser.IsOnline = false;
 
-                //set user IsOnline false when he disconnects
-                if (!string.IsNullOrWhiteSpace(Token))
-                {
-                    User? connectedUser = await UserService.ReadFirst(x => x.Token == Token);
-                    if (connectedUser != null)
-                    {
-                        connectedUser.ConnectionId = null;
-                        connectedUser.IsOnline = false;
-
-                        User[] connectedUsers = new User[1] { connectedUser };
-                        await UserService.Update(connectedUsers);
-                    }
-                }
-
+                User[] connectedUsers = new User[1] { connectedUser };
+                await UserService.Update(connectedUsers);
             }
 
             await base.OnDisconnectedAsync(exception);

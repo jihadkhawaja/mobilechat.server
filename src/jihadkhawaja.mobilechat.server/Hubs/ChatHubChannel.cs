@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace jihadkhawaja.mobilechat.server.Hubs
 {
@@ -41,16 +42,17 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                     return false;
                 }
 
-                string Token = hc.Request.Query["access_token"];
+                var identity = hc.User.Identity as ClaimsIdentity;
+                var userIdClaim = identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-                User? user = await UserService.ReadFirst(x => x.Token == Token);
+                Guid ConnectorUserId = Guid.Parse(userIdClaim.Value);
+
+                User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
 
                 if (user == null)
                 {
                     return false;
                 }
-
-                Guid ConnectorUserId = user.Id;
 
                 ChannelUser[] channelUsers = new ChannelUser[usernames.Length];
 
@@ -144,14 +146,18 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                     return null;
                 }
 
-                string Token = hc.Request.Query["access_token"];
-                User? user = await UserService.ReadFirst(x => x.Token == Token);
+                var identity = hc.User.Identity as ClaimsIdentity;
+                var userIdClaim = identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+                Guid ConnectorUserId = Guid.Parse(userIdClaim.Value);
+
+                // Retrieve the user using the user id claim
+                User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
 
                 if (user == null)
                 {
                     return null;
                 }
-                Guid ConnectorUserId = user.Id;
 
                 List<ChannelUser> channelUsers = (await ChannelUsersService.Read(x => x.UserId == ConnectorUserId)).ToList();
                 foreach (ChannelUser cu in channelUsers)
@@ -160,7 +166,7 @@ namespace jihadkhawaja.mobilechat.server.Hubs
 
                     if (channel == null)
                     {
-                        return null;
+                        continue;
                     }
 
                     userChannels.Add(channel);
@@ -193,16 +199,18 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return false;
             }
 
-            string Token = hc.Request.Query["access_token"];
+            var identity = hc.User.Identity as ClaimsIdentity;
+            var userIdClaim = identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            User? user = await UserService.ReadFirst(x => x.Token == Token);
+            Guid ConnectorUserId = Guid.Parse(userIdClaim.Value);
+
+            // Retrieve the user using the user id claim
+            User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
 
             if (user == null)
             {
                 return false;
             }
-
-            Guid ConnectorUserId = user.Id;
 
             if (!await IsChannelAdmin(channelId, ConnectorUserId))
             {
@@ -230,15 +238,17 @@ namespace jihadkhawaja.mobilechat.server.Hubs
                 return false;
             }
 
-            string Token = hc.Request.Query["access_token"];
+            var identity = hc.User.Identity as ClaimsIdentity;
+            var userIdClaim = identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            User? user = await UserService.ReadFirst(x => x.Token == Token);
+            Guid ConnectorUserId = Guid.Parse(userIdClaim.Value);
+            // Retrieve the user using the user id claim
+            User? user = await UserService.ReadFirst(x => x.Id == ConnectorUserId);
 
             if (user == null)
             {
                 return false;
             }
-            Guid ConnectorUserId = user.Id;
 
             return await ChannelUsersService.Delete(x => x.UserId == ConnectorUserId && x.ChannelId == channelId);
         }
